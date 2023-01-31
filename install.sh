@@ -28,16 +28,18 @@ sudo ls > /dev/null
 #
 # Quieten apt
 #
-cat << EOF > /tmp/unattended.conf
+if [ ! -f /etc/needrestart/conf.d/99-unattended.conf ] ; then
+    cat << EOF > /tmp/unattended.conf
 # Restart services (l)ist only, (i)nteractive or (a)utomatically. 
 \$nrconf{restart} = 'l'; 
 # Disable hints on pending kernel upgrades. 
 \$nrconf{kernelhints} = 0; 
 EOF
-sudo mv /tmp/unattended.conf /etc/needrestart/conf.d/99-unattended.conf
+    sudo mv /tmp/unattended.conf /etc/needrestart/conf.d/99-unattended.conf
+fi
+sudo pro config set apt_news=false 2>/dev/null
 export NEEDRESTART_SUSPEND=true
 export DEBIAN_FRONTEND=noninteractive
-sudo pro config set apt_news=false
 #
 ################################################################################
 #
@@ -50,16 +52,22 @@ sudo apt -y install coreutils git curl apt-transport-https ca-certificates \
 #
 ################################################################################
 #
-# Clone git repository
+# Clone or update git repository
+#
 #
 cd /usr/share
-sudo git clone https://github.com/alandoyle/gnome-setup gnome-setup
+if [ -d gnome-setup ] ; then
+    cd gnome-setup
+    sudo git pull
+else
+    sudo git clone https://github.com/alandoyle/gnome-setup gnome-setup
+    cd gnome-setup
+fi
 #
 ################################################################################
 #
 # Prep install
 #
-cd gnome-setup
 [ -f ./setup.sh  ] && chmod a+x ./setup.sh bin/*
 #
 ################################################################################
